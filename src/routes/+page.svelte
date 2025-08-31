@@ -2,7 +2,7 @@
 	import KellyChart from '$lib/components/KellyChart.svelte';
 	import type { PageData } from './$types';
 	import BetSizeChart from '$lib/components/BetSizeChart.svelte';
-	// import RangeSlider from '$lib/components/RangeSlider.svelte';
+	import RangeSlider from '$lib/components/RangeSlider.svelte';
 	// import type { ScaleOptionsByType } from 'chart.js'; // Import the type for safety
 
 	// This 'data' prop is automatically populated by your `+page.server.ts` load function!
@@ -16,15 +16,15 @@
 
 	// --- UI State ---
 	// We can have separate scale toggles for each chart
-	let useLogScaleActual = false;
+	//let useLogScaleActual = false;
 	let yAxisTypeActual: 'linear' | 'logarithmic'; // <-- Explicitly typed
 	$: yAxisTypeActual = useLogScaleActual ? 'logarithmic' : 'linear';
 
-	let useLogScaleKelly = false;
+	//let useLogScaleKelly = false;
 	let yAxisTypeKelly: 'linear' | 'logarithmic'; // <-- Explicitly typed
 	$: yAxisTypeKelly = useLogScaleKelly ? 'logarithmic' : 'linear';
 
-	/*
+	
 	// Declare the variable with the correct, strict type
 	let rangeValues: [number, number];
 
@@ -32,12 +32,52 @@
 	// This ensures it always has two elements.
 	$: rangeValues = [1, data.stats.totalTrades || 1];
 
-	let useLogScale = false;
+	// --- Reactive Filtering Logic (The core of the feature) ---
+	// This will re-run whenever `rangeValues` from the slider changes.
+	$: filteredData = (() => {
+		if (!data.chartData || data.chartData.labels.length === 0) {
+			return { chartData: {}, betSizeData: {} }; // Return empty objects
+		}
+
+		// Convert 1-based slider values to 0-based array indices
+		const startIndex = rangeValues[0] - 1;
+		const endIndex = rangeValues[1]; // .slice() is exclusive
+
+		return {
+			chartData: {
+				labels: data.chartData.labels.slice(startIndex, endIndex),
+				actualEquity: data.chartData.actualEquity.slice(startIndex, endIndex),
+				optimalKelly: data.chartData.optimalKelly.slice(startIndex, endIndex),
+				halfKelly: data.chartData.halfKelly.slice(startIndex, endIndex)
+			},
+			betSizeData: {
+				labels: data.betSizeData.labels.slice(startIndex, endIndex),
+				actual: data.betSizeData.actual.slice(startIndex, endIndex),
+				recommended: data.betSizeData.recommended.slice(startIndex, endIndex)
+			}
+		};
+	})();
+	
+	// --- State for the Y-Axis Toggles ---
+	let useLogScaleActual = false;
+	$: yAxisTypeActual = useLogScaleActual ? 'logarithmic' : 'linear';
+
+	let useLogScaleKelly = false;
+	$: yAxisTypeKelly = useLogScaleKelly ? 'logarithmic' : 'linear';
 
 	// Declare the variable with the explicit union type that matches the component's prop
-	let yAxisType: 'linear' | 'logarithmic';
+	// let yAxisType: 'linear' | 'logarithmic';
 
-	$: yAxisType = useLogScale ? 'logarithmic' : 'linear';
+	// --- Function to reset everything ---
+	function resetAll() {
+		// Reset the slider to the full range
+		rangeValues = [1, data.stats.totalTrades || 1];
+		// Reset the zoomm on all charts
+		if (actualChartComponent) actualChartComponent.resetZoom();
+		//if (kellyChartComponent) kellyChartComponent.resetZoom();
+		if (betSizeChartComponent) betSizeChartComponent.resetZoom();
+	}
+	// $: yAxisType = useLogScale ? 'logarithmic' : 'linear';
 	
 	// --- REACTIVE FILTERING LOGIC ---
 	// This is the core of the feature. This reactive block ($:) will re-run
@@ -64,12 +104,13 @@
 			optimalKelly: data.chartData.optimalKelly.slice(startIndex, endIndex),
 			halfKelly: data.chartData.halfKelly.slice(startIndex, endIndex)
 		};
-	})(); */
+	})();
 </script>
 
 <svelte:head>
 	<title>Dashboard | Kelly Journal</title>
 </svelte:head>
+
 
 <main class="dashboard">
 	<h1>Dashboard</h1>
@@ -80,7 +121,25 @@
 	</div>
 
 	 {#if data.stats.totalTrades > 0}
-	 	<!-- We now have a grid to hold our charts -->
+	 	<!-- NEW: Master Control Bar --><!-- We now have a grid to hold our charts -->
+		 <div class="master-controls">
+			<div class="range-slider-wrapper">
+				<label for="trade-range">
+					Filter Trade Range: <strong>{rangeValues[0]}</strong> to <strong>
+						{rangeValues[1]}</strong>
+						</label>
+						<RangeSlider
+								id="trade-range"
+								min={1}
+								max={data.stats.totalTrades}
+								step={1}
+								bind:values={rangeValues}
+						/>	
+			</div>
+			<button class="reset-button" on:click={resetAll}>Reset View</button>
+		 </div>
+
+		 <!-- Charts Grid -->
 		<div class="charts-grid">
 			<!-- Chart 1: Actual Equity -->
 			<div class="chart-wrapper">
@@ -198,6 +257,7 @@
 </main>
 
 <style>
+
 	.bet-size-wrapper {
     margin-top: 2rem;
 	}
