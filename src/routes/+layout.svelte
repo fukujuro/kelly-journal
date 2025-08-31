@@ -27,14 +27,20 @@
 	}
 
 	main {
+		/* This is the key change */
+		width: 100%;
+		max-width: 1600px; /* A generous max-width for very large monitors */
+		margin: 0 auto; /* Center the content */
+		padding: 1.5rem 2rem; /* Add some padding on the sides */
+		box-sizing: border-box; /* Ensures padding is included in the width 
 		flex: 1;
 		display: flex;
-		flex-direction: column;
+		flex-direction: column; 
 		padding: 1rem;
 		width: 100%;
 		max-width: 64rem;
 		margin: 0 auto;
-		box-sizing: border-box;
+		box-sizing: border-box; */
 	}
 
 	footer {
@@ -53,5 +59,14 @@
 		footer {
 			padding: 12px 0;
 		}
+	}
+
+	/* Use a global selector to set a clean base font and background */
+	:global(body) {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+			'Apple Color Emoji', 'Segoe UI Emoji';
+		margin: 0;
+		background-color: #f8f9fa; /* A very light grey background */
+		color: #212529; /* A dark, readable text color */
 	}
 </style>

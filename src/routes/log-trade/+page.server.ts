@@ -29,7 +29,7 @@ export const actions: Actions = {
                 asset: 'AAPL',
                 entryTimestamp: new Date(),
                 positionSize: 10,
-                pnl: 150.75,
+                pnl: -100,
                 userId: user.id,
                 strategyId: strategy.id
             }
