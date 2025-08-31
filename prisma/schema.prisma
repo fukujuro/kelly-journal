@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  createdAt DateTime  @default(now())
+
+  strategies  Strategy[]
+  trades      Trade[]
+
+  @@map("user") // Maps this model to a table named "users"
+}
+
+// Model for Trading Strategies. E.g., "Bull Flag Breakout", "Earnings Play".
+model Strategy {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String? // The '?' makes this field optional
+  createdAt   DateTime  @default(now())
+
+  userId      Int
+  user        User @relation(fields: [userId], references: [id])
+
+  trades Trade[]
+
+  @@map("strategies")
+}
+
+// Model for individual Trades. This is the core of our app.
+model Trade {
+  id              Int       @id @default(autoincrement())
+  asset           String // e.g., "AAPL", "BTC-USD"
+  entryTimestamp  DateTime
+  exitTimestamp   DateTime? // Optional, for open trades
+  positionSize    Decimal // Use Decimal for precise financial numbers
+  pnl             Decimal // Profit and Loss
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  // Relation fields to link back to the User and Strategy
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  strategyId  Int
+  strategy    Strategy @relation(fields: [strategyId], references: [id])
+
+  @@map("trades")
+}
